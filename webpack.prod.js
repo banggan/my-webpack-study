@@ -1,18 +1,50 @@
 'use strict'
-
+const glob = require('glob');
 const path = require('path');
 const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');//CSS文件指纹
-const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { CleanWebpackPlugin }= require('clean-webpack-plugin');
-const Autoprefixer = require('autoprefixer')
-// const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin");
+const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin'); //css压缩
+const HtmlWebpackPlugin = require('html-webpack-plugin'); //
+const { CleanWebpackPlugin }= require('clean-webpack-plugin');//清除构建目录
+const Autoprefixer = require('autoprefixer') // 自动补全
+const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin");//css资源内联
+const setMPA = ()=>{
+  const entry = {};
+  const htmlWebpackPlugins = [];
+  const entryFiles = glob.sync(path.join(__dirname,'./src/*/index.js')); //获取src目录下的所有入口文件
+  console.log('=======entryFiles',entryFiles);
+  Object.keys(entryFiles).map((index) => {
+		const entryFile = entryFiles[index];  //src/indx/index.js   
+		const match = entryFile.match(/src\/(.*)\/index\.js/);//匹配src开头, 末尾是index.js 中间的内容
+    const pageName = match && match[1];  //取index. search 
+    console.log('========pageName',pageName);
+ 		entry[pageName] = entryFile;
+ 		htmlWebpackPlugins.push(
+			new HtmlWebpackPlugin({
+				inlineSource: '.css$',
+				template: path.join(__dirname,`src/${pageName}/index.html`),
+				filename: `${pageName}.html`,
+				chunks: ['vendors', pageName],
+				inject: true,
+				minify: {
+					html5: true,
+					collapseWhitespace: true,
+					preserveLineBreaks: false,
+					minifyCSS: true,
+					minifyJS: true,
+					removeComments: false
+ 				}
+ 			})
+ 		);
+ 	});
+  return {
+    entry,
+    htmlWebpackPlugins
+  }
+}
+const { entry, htmlWebpackPlugins } = setMPA();
 module.exports ={
-  entry:{
-  	index:'./src/index.js',
-  	search:'./src/search.js'
-	},
+  entry: entry,
 	output:{
       path:path.join(__dirname,'dist'),
   	  filename:'[name]_[hash:8].js' //文件指纹
@@ -74,35 +106,6 @@ module.exports ={
     new OptimizeCssAssetsPlugin({
       assetNameRegExp:/\.css$/g,
       cssProcessor: require('cssnano')
-    }),
-    new HtmlWebpackPlugin({//一个html对应一个插件
-      template: path.join(__dirname,'src/search.html'), // 模板位置
-      filename: 'search.html',
-      chunks:['search'],
-      inject:true,
-      minify:{
-        html5:true,
-        collapseWhitespace:true,
-        preserveLineBreaks:false,
-        minifyJS:true,
-        minifyCSS:true,
-        removeComments:false
-      }
-    }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname,'src/index.html'),
-      filename: 'index.html',
-      chunks:['index'],
-      inject:true,
-      minify:{
-        html5:true,
-        collapseWhitespace:true,
-        preserveLineBreaks:false,
-        minifyJS:true,
-        minifyCSS:true,
-        removeComments:false
-      }
     })
-    
-  ]
+  ].concat(htmlWebpackPlugins)
 }

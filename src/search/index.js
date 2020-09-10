@@ -1,8 +1,8 @@
 'use strict'
  import React from 'react';
  import ReactDOM from 'react';
- import  "./search.css";
- import icon from './images/icon.png';
+ import  "./index.css";
+ import icon from '../images/icon.png';
  class Search extends React.Component{
      render(){
          return <div className="search-text"> 
