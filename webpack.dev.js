@@ -1,17 +1,53 @@
 'use strict'
 
+const glob = require('glob');
 const path = require('path');
 const webpack = require('webpack');
-const CleanWebpackPlugin= require('clean-webpack-plugin')
+const { CleanWebpackPlugin }= require('clean-webpack-plugin');//清除构建目录
 // const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 // const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
-// const HtmlWebpackPlugin= require('html-webpack-plugin')
+const HtmlWebpackPlugin= require('html-webpack-plugin')
 // const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin");
+
+const setMPA = ()=>{
+  const entry = {};
+  const htmlWebpackPlugins = [];
+  const entryFiles = glob.sync(path.join(__dirname,'./src/*/index.js')); //获取src目录下的所有入口文件
+  console.log('=======entryFiles',entryFiles);
+  Object.keys(entryFiles).map((index) => {
+		const entryFile = entryFiles[index];  //src/indx/index.js   
+		const match = entryFile.match(/src\/(.*)\/index\.js/);//匹配src开头, 末尾是index.js 中间的内容
+    const pageName = match && match[1];  //取index. search 
+    console.log('========pageName',pageName);
+ 		entry[pageName] = entryFile;
+ 		htmlWebpackPlugins.push(
+			new HtmlWebpackPlugin({
+				inlineSource: '.css$',
+				template: path.join(__dirname,`src/${pageName}/index.html`),
+				filename: `${pageName}.html`,
+				chunks: ['vendors', pageName],
+				inject: true,
+				minify: {
+					html5: true,
+					collapseWhitespace: true,
+					preserveLineBreaks: false,
+					minifyCSS: true,
+					minifyJS: true,
+					removeComments: false
+ 				}
+ 			})
+ 		);
+ 	});
+  return {
+    entry,
+    htmlWebpackPlugins
+  }
+}
+const { entry, htmlWebpackPlugins } = setMPA();
+
+
 module.exports ={
-  entry:{
-  	index:'./src/index.js',
-  	search:'./src/search.js'
-	},
+  entry: entry,
 	output:{
       path:path.join(__dirname,'dist'),
   	  filename:'[name]_[hash:8].js' //文件指纹
@@ -74,7 +110,8 @@ module.exports ={
 	plugins:[
     new webpack.HotModuleReplacementPlugin(),
     new CleanWebpackPlugin(),
-  ],
+    new webpack.optimize.ModuleConcatenationPlugin();
+  ].concat(htmlWebpackPlugins),
   devServer:{
     contentBase:'./dist',
     hot:true

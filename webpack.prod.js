@@ -8,6 +8,8 @@ const HtmlWebpackPlugin = require('html-webpack-plugin'); //
 const { CleanWebpackPlugin }= require('clean-webpack-plugin');//清除构建目录
 const Autoprefixer = require('autoprefixer') // 自动补全
 const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin");//css资源内联
+const HtmlWebpackExternalsPlugin = require("html-webpack-externals-plugin");//公共资源分离
+
 const setMPA = ()=>{
   const entry = {};
   const htmlWebpackPlugins = [];
@@ -24,7 +26,7 @@ const setMPA = ()=>{
 				inlineSource: '.css$',
 				template: path.join(__dirname,`src/${pageName}/index.html`),
 				filename: `${pageName}.html`,
-				chunks: ['vendors', pageName],
+				chunks: ['vendors','commons', pageName],
 				inject: true,
 				minify: {
 					html5: true,
@@ -49,7 +51,7 @@ module.exports ={
       path:path.join(__dirname,'dist'),
   	  filename:'[name]_[hash:8].js' //文件指纹
     },
-  mode:'production',
+  mode:'production',//  mode:'development',production
 	module:{
     rules:[
         {// js jsx解析 
@@ -106,6 +108,35 @@ module.exports ={
     new OptimizeCssAssetsPlugin({
       assetNameRegExp:/\.css$/g,
       cssProcessor: require('cssnano')
-    })
-  ].concat(htmlWebpackPlugins)
+    }),
+    // new HtmlWebpackExternalsPlugin({
+    //   externals: [
+    //     {
+    //       module: 'react',
+    //       entry: 'https://now8.gtimg.com/now/lib/16.8.6/react.min.js',
+    //       global: 'React',
+    //     },
+    //     {
+    //       module: 'react-dom',
+    //       entry: 'https://now8.gtimg.com/now/lib/16.8.6/react-dom.min.js',
+    //       global: 'ReactDOM',
+    //     },
+    //   ],
+    // })
+  ].concat(htmlWebpackPlugins),
+  optimization: {
+    splitChunks: {
+      minSize:0,//抽离的公共包最小的大小，单位是字节
+      cacheGroups: {
+        commons: {
+          //test:/(react | react-dom)/,
+         // name:'vendors',
+          name:'commons', //需要在HtmlWebpackPlugin的chunks中加入 新的name
+          chunks:'all',
+          minChunks:2  //使用的次数超过这个就提取成公共的文件
+        }
+      }
+    }
+  },
+  devtool:'source map'
 }
