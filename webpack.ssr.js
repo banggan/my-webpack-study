@@ -9,7 +9,7 @@ const { CleanWebpackPlugin }= require('clean-webpack-plugin');//清除构建目�
 const Autoprefixer = require('autoprefixer') // 自动补全
 const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin");//css资源内联
 const HtmlWebpackExternalsPlugin = require("html-webpack-externals-plugin");//公共资源分离
-const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');//构建命令行优化
+
 const setMPA = ()=>{
   const entry = {};
   const htmlWebpackPlugins = [];
@@ -49,7 +49,9 @@ module.exports ={
   entry: entry,
 	output:{
       path:path.join(__dirname,'dist'),
-  	  filename:'[name]_[hash:8].js' //文件指纹
+      filename:'[name]-server.js', //文件指纹
+      libraryTarget:'umd'
+      
     },
   mode:'production',//  mode:'development',production
 	module:{
@@ -112,15 +114,6 @@ module.exports ={
       assetNameRegExp:/\.css$/g,
       cssProcessor: require('cssnano')
     }),
-    new FriendlyErrorsWebpackPlugin(),
-    function(){
-      this.hooks.done.tap('done',(stats)=>{
-        if(stats.compilation.errors && stats.compilation.errors.length&&process.argv.indexOf('--watch')==-1){
-          console.log('builderror');
-          process.exit(1);
-        }
-      })
-    },
     // new HtmlWebpackExternalsPlugin({
     //   externals: [
     //     {
@@ -136,7 +129,6 @@ module.exports ={
     //   ],
     // })
   ].concat(htmlWebpackPlugins),
-  stats:'errors-only',
   optimization: {
     splitChunks: {
       minSize:0,//抽离的公共包最小的大小，单位是字节

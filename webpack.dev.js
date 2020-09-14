@@ -8,6 +8,7 @@ const { CleanWebpackPlugin }= require('clean-webpack-plugin');//清除构建目�
 // const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const HtmlWebpackPlugin= require('html-webpack-plugin')
 // const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin");
+const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');//构建命令行优化
 
 const setMPA = ()=>{
   const entry = {};
@@ -110,10 +111,12 @@ module.exports ={
 	plugins:[
     new webpack.HotModuleReplacementPlugin(),
     new CleanWebpackPlugin(),
-    new webpack.optimize.ModuleConcatenationPlugin();
+    new webpack.optimize.ModuleConcatenationPlugin(),
+    new FriendlyErrorsWebpackPlugin(),
   ].concat(htmlWebpackPlugins),
   devServer:{
     contentBase:'./dist',
-    hot:true
+    hot:true,
+    stats:'errors-only',
   }
 }
