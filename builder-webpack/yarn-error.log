@@ -1,0 +1,46 @@
+Arguments: 
+  /usr/local/lib/node_modules/node/bin/node /usr/local/bin/yarn
+
+PATH: 
+  /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+Yarn version: 
+  1.22.5
+
+Node version: 
+  13.1.0
+
+Platform: 
+  darwin x64
+
+Trace: 
+  Error: ENOENT: no such file or directory, copyfile '/Users/banggan/Library/Caches/Yarn/v6/npm-supports-color-5.5.0-e2e69a44ac8772f78a1ec0b35b689df6530efc8f-integrity/node_modules/supports-color/browser.js' -> '/Users/banggan/my-webpack-study/builder-webpack/node_modules/@babel/highlight/node_modules/supports-color/browser.js'
+
+npm manifest: 
+  {
+    "name": "builder-webpack",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "directories": {
+      "lib": "lib"
+    },
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+      "babel-eslint": "^10.1.0",
+      "eslint": "^7.9.0",
+      "eslint-config-airbnb-base": "^14.2.0",
+      "webpack-merge": "^5.1.4"
+    }
+  }
+
+yarn manifest: 
+  No manifest
+
+Lockfile: 
+  No lockfile
