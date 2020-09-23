@@ -9,7 +9,8 @@ const { CleanWebpackPlugin }= require('clean-webpack-plugin');//清除构建目�
 const Autoprefixer = require('autoprefixer') // 自动补全
 const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin");//css资源内联
 const HtmlWebpackExternalsPlugin = require("html-webpack-externals-plugin");//公共资源分离
-
+const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
+const smp = new SpeedMeasurePlugin();
 const setMPA = ()=>{
   const entry = {};
   const htmlWebpackPlugins = [];
@@ -45,7 +46,7 @@ const setMPA = ()=>{
   }
 }
 const { entry, htmlWebpackPlugins } = setMPA();
-module.exports ={
+module.exports = smp.wrap({
   entry: entry,
 	output:{
       path:path.join(__dirname,'dist'),
@@ -144,4 +145,4 @@ module.exports ={
     }
   },
   devtool:'source map'
-}
+})

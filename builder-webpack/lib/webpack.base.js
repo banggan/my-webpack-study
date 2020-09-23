@@ -3,10 +3,11 @@
 const glob = require('glob');
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');// 清除构建目录
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');// 构建命令行优化
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');// CSS文件指纹
 // 多页面打包
+//设置项目目录process.cwd()当前运行的temolate
 const projectRoot = process.cwd();
 
 const setMPA = () => {
@@ -87,8 +88,8 @@ module.exports = {
     ],
   },
   plugins: [
-    new CleanWebpackPlugin(),
     new FriendlyErrorsWebpackPlugin(),
+    new CleanWebpackPlugin(),
     new MiniCssExtractPlugin({
       filename: '[name]_[contenthash:8].css',
     }),

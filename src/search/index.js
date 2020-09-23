@@ -2,9 +2,10 @@
  import React from 'react';
  import ReactDOM from 'react-dom';
  import  "./index.css";
- import icon from '../images/icon.png';
+ import bg from '../images/bg.jpg';
  import  '../../common';
  import {a} from './tree-shaking';
+ import 'babel-polyfill'
  class Search extends React.Component{
 
      constructor(){
@@ -29,6 +30,7 @@
          {
              Text ? <Text/>:null
          }
+         <img src ={bg} />
          search text123<img src='https://common.cnblogs.com/images/wechat.png' onClick = {this.loadcomponent.bind(this)} />
          </div>;
      }

@@ -3,3 +3,6 @@
     color: blue;
     display: flex;
 }
+.unused-css{
+    font-size: 12px;
+}

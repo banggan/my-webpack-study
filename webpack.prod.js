@@ -10,6 +10,13 @@ const Autoprefixer = require('autoprefixer') // 自动补全
 const HTMLInlineCSSWebpackPlugin = require("html-inline-css-webpack-plugin");//css资源内联
 const HtmlWebpackExternalsPlugin = require("html-webpack-externals-plugin");//公共资源分离
 const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');//构建命令行优化
+const SpeedMeasurePlugin = require('speed-measure-webpack-plugin'); //速度分析
+const smp = new SpeedMeasurePlugin();
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin; //体积分析
+const HappyPack = require('happypack') //多进程
+const TerserPlugin = require('terser-webpack-plugin'); //多进程并行压缩
+const HardSourceWebpackPlugin = require('hard-source-webpack-plugin');//模块缓存
+const PurgecssWebpackPlugin = require('purgecss-webpack-plugin') //css擦除
 const setMPA = ()=>{
   const entry = {};
   const htmlWebpackPlugins = [];
@@ -45,7 +52,10 @@ const setMPA = ()=>{
   }
 }
 const { entry, htmlWebpackPlugins } = setMPA();
-module.exports ={
+const PATHS = {
+  src: path.join(__dirname, 'src')
+};
+module.exports = smp.wrap({
   entry: entry,
 	output:{
       path:path.join(__dirname,'dist'),
@@ -56,9 +66,17 @@ module.exports ={
     rules:[
         {// js jsx解析 
             test:/.js$/,
+            include:path.resolve('src'),
             use: [
-              'babel-loader',
-              'eslint-loader'
+              // {
+              //   loader:'thread-loader',
+              //   options:{
+              //     workers:3                
+              //   }
+              // },
+              // 'babel-loader',
+              // 'eslint-loader'
+              'happypack/loader'
             ] //babel编译es6
         },
         {//css less 解析
@@ -97,6 +115,28 @@ module.exports ={
                   name:'[name]_[hash:8].[ext]' //ext资源后缀名
                 },
               },
+              {
+                loader:'image-webpack-loader',
+	              options:{
+		              mozjpeg:{
+ 		            		progressive:true,
+ 		            		quality:65
+		            	},
+ 		              optipng:{ //针对png
+ 		            	  enabled:false
+		              },
+ 		              pngquant:{
+ 		            	  quality:'65-90',
+ 		            	  speed:4
+		              },
+ 		              gifsicle:{
+ 		            	  interlaced:false
+		              },
+ 		              webp:{
+ 		            	  quelity:75
+		              } 
+                }
+              },
             ],
         }
     ]
@@ -113,6 +153,10 @@ module.exports ={
       cssProcessor: require('cssnano')
     }),
     new FriendlyErrorsWebpackPlugin(),
+    // new BundleAnalyzerPlugin(),
+    new HappyPack({
+      loaders:[ 'babel-loader?cacheDirectory=true' ]
+    }),
     function(){
       this.hooks.done.tap('done',(stats)=>{
         if(stats.compilation.errors && stats.compilation.errors.length&&process.argv.indexOf('--watch')==-1){
@@ -121,20 +165,27 @@ module.exports ={
         }
       })
     },
-    // new HtmlWebpackExternalsPlugin({
-    //   externals: [
-    //     {
-    //       module: 'react',
-    //       entry: 'https://now8.gtimg.com/now/lib/16.8.6/react.min.js',
-    //       global: 'React',
-    //     },
-    //     {
-    //       module: 'react-dom',
-    //       entry: 'https://now8.gtimg.com/now/lib/16.8.6/react-dom.min.js',
-    //       global: 'ReactDOM',
-    //     },
-    //   ],
-    // })
+    new HtmlWebpackExternalsPlugin({
+      externals: [
+        {
+          module: 'react',
+          entry: 'https://now8.gtimg.com/now/lib/16.8.6/react.min.js',
+          global: 'React',
+        },
+        {
+          module: 'react-dom',
+          entry: 'https://now8.gtimg.com/now/lib/16.8.6/react-dom.min.js',
+          global: 'ReactDOM',
+        },
+      ],
+    }),
+    new webpack.DllReferencePlugin({
+      manifest:require('./build/library/library.json')
+    }),
+    new HardSourceWebpackPlugin(),
+    new PurgecssWebpackPlugin({ //路径需要绝对路径  把复合规则的路径全部匹配出来
+      paths: glob.sync(`${PATHS.src}/**/*`,  { nodir: true }),
+  }),
   ].concat(htmlWebpackPlugins),
   stats:'errors-only',
   optimization: {
@@ -149,7 +200,21 @@ module.exports ={
           minChunks:2  //使用的次数超过这个就提取成公共的文件
         }
       }
-    }
+    },
+    minimizer:[
+      new TerserPlugin({
+         parallel:4,
+         cache:true
+      })
+    ]
   },
-  devtool:'source map'
-}
+  devtool:'source map',
+  resolve:{
+    alias:{
+      'react':path.resolve(__dirname,'./node_modules/react/umd/react.production.min.js'),
+      'react-dom':path.resolve(__dirname,'./node_modules/react-dom/umd/react-dom.production.min.js'),
+    },
+    extensions:['.js'],
+    mainFields:['main'] //主查找⼊⼝
+  }
+})
